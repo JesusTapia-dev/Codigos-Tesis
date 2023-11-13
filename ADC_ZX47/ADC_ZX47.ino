@@ -3,7 +3,7 @@
 int analogValue=0;
 float Vout=0;
 float Plinea=62.5,Vpk=0;// Valor entre 1 y 500 kW, las unidades son kW
-float Plcal=0,dif=0;
+float Plcal=0,dif=0,difPlow=0;
 bool serialData=1;//Un valor de 1 indica que se debe ingresar por monitor serial
 float VoutRef=1;
 int numSamples=20;
@@ -21,24 +21,35 @@ void setup() {
   Vpk=sqrt(10*Plinea)/5;
   VoutRef=ecuacionLineal(Vpk);
   Serial.print("Voltaje de salida de referencia: ");
-  Serial.println(VoutRef);
+  Serial.print(VoutRef);
+  Serial.print("Voltaje pkpk:"); Serial.print(" "); Serial.println(Vpk);
 }
 void loop() {
+  int Parray[10];
   total=0;
   //analogValue = analogRead(pinADC);
   //Hacemos multisampling para asegurar el buen performance
+  /*
   for (int i = 0; i < numSamples; i++) {
     total += analogRead(pinADC);
-  }
-  int averageValue = total / numSamples;
+  }*/
+  //int averageValue = total / numSamples;
+  int averageValue=analogRead(pinADC);
   Vout = 0.8291*averageValue+90.27;//Ajuste realizado para el ADC
   //Serial.println(Vout);
   Plcal=5*pow((Vout+101),2)/(2*175.19*175.19);//Calculamos la potencia en la línea
   dif=abs(Plinea-Plcal)*100/Plinea;//Hallamos la diferencia porcentual
-  if(dif>10 && VoutRef>3000) Serial.println("Nivel anómalo de potencia");
-  else if(VoutRef<3000){
-    Serial.println("Potencia menor a la debida");
-  }
+  difPlow=abs(Plinea-Plcal);
+  if(dif>10 &&  Vout>120){
+    Serial.print("Nivel anómalo de potencia Ph");
+    Serial.print(" "); Serial.print(Plcal); 
+    Serial.print(" "); Serial.println(Vout);
+  } 
+ /* else if(VoutRef<3000 && difPlow>5 && Vout>120){
+    Serial.print("Potencia anómala para Plow");
+    Serial.print(" "); Serial.println(Plcal);
+    Serial.println(Vout);
+  }*/
 }
 float ecuacionLineal(float Vpk){
   float m=175.19,b=-101;
