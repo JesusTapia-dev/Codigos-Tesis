@@ -1,17 +1,18 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-const char *ssid = "maracumango";
+const char *ssid = "HUAWEI P smart";
 const char *password = "12345678";
-const char *mqtt_server = "192.168.199.158";
+const char *mqtt_server = "192.168.43.149";
 const int mqtt_port = 1883;
 const char *mqtt_client_id = "ESP32_Client";
 const char *subscribe_topic = "tesis/potenciaNominal";
 const char *publish_topic = "tesis/potencia";
+const char *publish_topic_voltage = "tesis/ReferenceVoltage";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-
+float Vpk=0,Vout=0;
 void setup_wifi() {
   delay(10);
   Serial.println();
@@ -38,11 +39,13 @@ void callback(char *topic, byte *payload, unsigned int length) {
   // Convierte la cadena a un número (en este caso, asume que es un float)
   float potenciaNominal = atof(receivedValue);
   // Realiza cálculos basados en la potencia nominal recibida (sustituye con tu lógica)
-  float voltajeCalculado = potenciaNominal * 1.2;
+  Vpk= sqrt(10*potenciaNominal)/5;
+  Vout=175.19*Vpk-101;
+
   // Publica el resultado en el tópico de voltaje
   char result[10];
-  snprintf(result, sizeof(result), "%.2f", voltajeCalculado);
-  client.publish(publish_topic, result);
+  snprintf(result, sizeof(result), "%.2f", Vout);
+  client.publish(publish_topic_voltage, result);
 }
 
 void reconnect() {

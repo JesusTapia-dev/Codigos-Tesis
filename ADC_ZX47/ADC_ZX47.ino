@@ -27,48 +27,27 @@ void setup() {
   Serial.print("Voltaje pkpk:"); Serial.print(" "); Serial.println(Vpk);
 }
 void loop() {
-  total=0;
-  //analogValue = analogRead(pinADC);
-  /*
-  for (int i = 0; i < numSamples; i++) {
-    total += analogRead(pinADC);
-  }*/
-  //int averageValue = total / numSamples;
   int averageValue=analogRead(pinADC);
   Vout = 0.8291*averageValue+90.27;//Ajuste realizado para el ADC
-  //Serial.println(Vout);
   Plcal=5*pow((Vout+101),2)/(2*175.19*175.19);//Calculamos la potencia en la línea
   //dif=abs(Plinea-Plcal)*100/Plinea;//Hallamos la diferencia porcentual
-  if (Plcal>3){//valores por debajo de este umbral serán leidos como tierra
+  if (Plcal>4){//valores por debajo de este umbral serán leidos como tierra
     Parray[contador]=Plcal;
    contador =contador+1;
   }  
   //cuando llenamos los valores hacemos la 
-  if (contador==SIZE){
+  if (contador>(SIZE-1)){
     p=&Parray[0];
     Pmax=find_maximun(p);
     contador=0;
     dif=abs(Plinea-Pmax)*100/Plinea;
     difPlow=abs(Plinea-Pmax);
-    if(dif>10 && difPlow>7) Serial.println(Pmax);  
-  }
-
-
-  /*
-  if(dif>10 &&  Vout>120 ){
-   Parray[contador]=Plcal;
-   contador =contador+1;
-    if(contador==SIZE){
-      p=&Parray[0];
-      Pmax=find_maximun(p);
-      contador=0;
-      difPlow=abs(Plinea-Pmax);
-      if (difPlow>8) {
-        Serial.print("Potencia anomala en el transmisor: "); 
-        Serial.println(Pmax);  
-      }
+    Serial.print("Valor normal: "); Serial.println(Pmax);
+    if(dif>10 && difPlow>9) {
+      Serial.print("Nivel anómalo: ");
+      Serial.println(Pmax);  
     }
-  } */
+  }
 }
 float ecuacionLineal(float Vpk){
   float m=175.19,b=-101;
