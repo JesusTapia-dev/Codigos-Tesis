@@ -5,7 +5,7 @@ int analogValue=0;
 float Vout=0;
 float Plinea=62.5,Vpk=0;// Valor entre 1 y 500 kW, las unidades son kW
 float Plcal=0,dif=0,difPlow=0;
-bool serialData=1;//Un valor de 1 indica que se debe ingresar por monitor serial
+bool serialData=0;//Un valor de 1 indica que se debe ingresar por monitor serial
 float VoutRef=1,Pmax;
 int numSamples=20;
 int total=0;
@@ -30,13 +30,18 @@ void loop() {
   int averageValue=analogRead(pinADC);
   Vout = 0.8291*averageValue+90.27;//Ajuste realizado para el ADC
   Plcal=5*pow((Vout+101),2)/(2*175.19*175.19);//Calculamos la potencia en la línea
+  
+  Serial.println(Plcal);
+  delay(10);
   //dif=abs(Plinea-Plcal)*100/Plinea;//Hallamos la diferencia porcentual
+  /*
   if (Plcal>4){//valores por debajo de este umbral serán leidos como tierra
     Parray[contador]=Plcal;
    contador =contador+1;
   }  
   //cuando llenamos los valores hacemos la 
-  if (contador>(SIZE-1)){
+  int x=SIZE-1;
+  if (contador>x){
     p=&Parray[0];
     Pmax=find_maximun(p);
     contador=0;
@@ -44,10 +49,9 @@ void loop() {
     difPlow=abs(Plinea-Pmax);
     Serial.print("Valor normal: "); Serial.println(Pmax);
     if(dif>10 && difPlow>9) {
-      Serial.print("Nivel anómalo: ");
       Serial.println(Pmax);  
     }
-  }
+  }*/
 }
 float ecuacionLineal(float Vpk){
   float m=175.19,b=-101;
