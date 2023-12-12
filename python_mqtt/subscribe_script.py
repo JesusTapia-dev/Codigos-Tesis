@@ -8,7 +8,7 @@ analogRawMatriz=[]
 contador = 0
 data=[]
 def init():
-    ax.set_ylim(0, 500)  # Ajusta los límites de la gráfica según tus necesidades
+    ax.set_ylim(900, 1800)  # Ajusta los límites de la gráfica según tus necesidades
     ax.set_xlim(0,30)
     line.set_data([], [])
     return line,
@@ -36,11 +36,11 @@ def on_message(client, userdata, msg):
     if contador==500:
         contador=0
         valor_promedio = sum(analogRawMatriz) / len(analogRawMatriz)
-        potencia=0.6233*valor_promedio+62.891
-        data.append(potencia)
+        # potencia=1.5476*valor_promedio-91.898
+        data.append(valor_promedio)
         data[:] = data[-30:]
         analogRawMatriz=[]
-        print(potencia)    
+        print(valor_promedio)    
 # Configurar el cliente MQTT
 client = mqtt.Client()
 # Configurar los callbacks
@@ -61,5 +61,5 @@ client.loop_start()
 plt.show()
 client.loop_stop()
 """"
-PARA UN IPP DE 10MS Y 10 US DE ANCHO, la ecuación sera:PotLinea= 0.6233*AnalogRaw+62.891
+PARA UN IPP DE 10MS Y 10 US DE ANCHO, la ecuación sera:PotLinea= 1.5476*AnalogRaw-91.898
 """
