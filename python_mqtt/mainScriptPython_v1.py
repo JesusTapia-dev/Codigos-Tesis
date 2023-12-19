@@ -1,17 +1,17 @@
 import paho.mqtt.client as mqtt
-from datetime import datetime
+import paho.mqtt.publish as publish
+from datetime import datetime, timezone, timedelta
 import numpy as np
 import json
 import time
-subscribe_topic="tesis/test"
-publish_topic="tesis/potencia"
-broker_address = "localhost"#"192.168.43.149"
-analogRawMatriz=[[],[],[],[],[],[],[],[]]
-numMaxdatos=1000
+subscribe_topic="tesis/analogRaw"
+publish_topic="atrad/test3"#"tesis/potencia"
+broker_address = "10.10.10.102"#10.10.10.102"#"192.168.43.149"
+analogRawMatriz=[[],[],[],[],[],[],[],[]]#guardamos los valores del 
+numMaxdatos=1000 #definimos el numero máximo de datos a promediar
 contador = 0
-data=[]
 interval_start_time = time.time()
-interval_duration=15 #duracion del intervalo en segundos para el envio de datos
+interval_duration=30 #duracion del intervalo (en segundos) para el envio de datos
 def potenciaAncho10us(AnalogRaw):
     potencia=[0,0,0,0,0,0,0,0]
     m=1.5476
@@ -22,11 +22,20 @@ def potenciaAncho10us(AnalogRaw):
 
 def potenciaAncho20us(AnalogRaw):
     potencia=[0,0,0,0,0,0,0,0]
-    m=1.5476
-    b=-91.898
+    m=0.6233
+    b=62.891
     for i in range(8):
         potencia[i]=m*AnalogRaw[i]+b
     return potencia
+#la potencia default considera en general valores mayores a 100 us
+def potenciaDefault(AnalogRaw):
+    potencia=[0,0,0,0,0,0,0,0]
+    m=0.6233
+    b=62.891
+    for i in range(8):
+        potencia[i]=m*AnalogRaw[i]+b
+    return potencia
+
 
 def leer_datos_desde_txt(archivo):
     try:
@@ -51,11 +60,18 @@ def procesamiento_data(analogRawMatriz):
             potencia=potenciaAncho10us(average_raw)      
         if ancho>15 and ancho<25:
             potencia=potenciaAncho20us(average_raw)
-        processed_data = {"Ancho_us":IPP,"average_potencia": potencia, "timestamp": datetime.now()}
-        #client.publish(publish_topic, json.dumps(processed_data))
+        timestamp_actual = int(time.time())
+        fecha_utc=datetime.utcfromtimestamp(timestamp_actual)
+        zona_horaria_utc_menos_5 = timezone(timedelta(hours=-5))
+        fecha_utc_menos_5 = fecha_utc.replace(tzinfo=timezone.utc).astimezone(zona_horaria_utc_menos_5)   
+        fecha_legible=fecha_utc_menos_5.strftime('%d-%m-%Y %H:%M:%S')
+        estado=[1 if x > 0 else 0 for x in potenciaNominal]
+        processed_data = {"Ancho_us":IPP,"average_potencia": potencia, "timestamp": fecha_legible,"potenciaNominal":potenciaNominal,"estado":estado}
+        client.publish(publish_topic, json.dumps(processed_data))
         print("---------------------------------------")
         print(average_raw)
         print(processed_data)
+        print(type(processed_data["average_potencia"]))
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -73,7 +89,7 @@ def on_message(client, userdata, msg):
         for i in range(8):
             analogRawMatriz[i].append(lista[i])
             contador=contador+1
-#Leo los datos de la configuracion
+#Leo los datos de la configuracion y halla el ancho
 archivo_txt = 'commandPotencia.txt' 
 datos_numericos = leer_datos_desde_txt(archivo_txt)
 if len(datos_numericos)!=10:
@@ -84,14 +100,12 @@ else:
     Dutty=datos_numericos[1]
     ancho=IPP*Dutty*pow(10,3)/100
     potenciaNominal=datos_numericos[2:]
-    
 # Configurar el cliente MQTT
 client = mqtt.Client()
 # Configurar los callbacks
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(broker_address, port=1883, keepalive=60)
-#client.loop_forever()
 
 client.loop_start()
 try:
@@ -100,14 +114,13 @@ try:
         current_time = time.time()
         elapsed_time = current_time - interval_start_time
         if elapsed_time >= interval_duration:
-            procesamiento_data(analogRawMatriz)  # Calcula la potencia y envía los datos al nuevo tópico
+            procesamiento_data(analogRawMatriz)  # Calcula la potencia y envía los datos
             interval_start_time = current_time  # Reinicia el temporizador del intervalo
             analogRawMatriz=[[],[],[],[],[],[],[],[]]
-        # Puedes ajustar el tiempo de espera según tus necesidades
         time.sleep(1)
 
 except KeyboardInterrupt:
     print("Programa detenido por el usuario.")
-    #procesamiento_data()  # Asegúrate de enviar los datos acumulados antes de salir
     client.disconnect()
     client.loop_stop()
+#client.loop_forever()
