@@ -36,7 +36,6 @@ def potenciaDefault(AnalogRaw):
         potencia[i]=m*AnalogRaw[i]+b
     return potencia
 
-
 def leer_datos_desde_txt(archivo):
     try:
         with open(archivo, 'r') as file:
@@ -53,7 +52,7 @@ def leer_datos_desde_txt(archivo):
 
 def procesamiento_data(analogRawMatriz):
     if analogRawMatriz[0]:
-        average_raw=[0,0,0,0,0,0,0,0,0]
+        average_raw=[0,0,0,0,0,0,0,0]
         for i in range(8):
             average_raw[i] = sum(analogRawMatriz[i]) / len(analogRawMatriz[i])  
         if(ancho<15):
@@ -66,12 +65,12 @@ def procesamiento_data(analogRawMatriz):
         fecha_utc_menos_5 = fecha_utc.replace(tzinfo=timezone.utc).astimezone(zona_horaria_utc_menos_5)   
         fecha_legible=fecha_utc_menos_5.strftime('%d-%m-%Y %H:%M:%S')
         estado=[1 if x > 0 else 0 for x in potenciaNominal]
-        processed_data = {"Ancho_us":IPP,"average_potencia": potencia, "timestamp": fecha_legible,"potenciaNominal":potenciaNominal,"estado":estado}
+        processed_data = {"Ancho_us":IPP,"pow": potencia, "time": fecha_legible,"potenciaNominal":potenciaNominal,"status":estado}
         client.publish(publish_topic, json.dumps(processed_data))
         print("---------------------------------------")
         print(average_raw)
         print(processed_data)
-        print(type(processed_data["average_potencia"]))
+        print(type(processed_data["pow"]))
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
