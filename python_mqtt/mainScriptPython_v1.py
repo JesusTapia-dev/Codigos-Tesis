@@ -65,7 +65,7 @@ def procesamiento_data(analogRawMatriz):
         fecha_utc_menos_5 = fecha_utc.replace(tzinfo=timezone.utc).astimezone(zona_horaria_utc_menos_5)   
         fecha_legible=fecha_utc_menos_5.strftime('%d-%m-%Y %H:%M:%S')
         estado=[1 if x > 0 else 0 for x in potenciaNominal]
-        processed_data = {"Ancho_us":IPP,"pow": potencia, "time": fecha_legible,"potenciaNominal":potenciaNominal,"status":estado}
+        processed_data = {"Ancho_us":IPP,"pow": potencia, "time": fecha_legible,"potenciaNominal":potenciaNominal,"status":estado,"threshold":threshold}
         client.publish(publish_topic, json.dumps(processed_data))
         print("---------------------------------------")
         print(average_raw)
@@ -91,14 +91,15 @@ def on_message(client, userdata, msg):
 #Leo los datos de la configuracion y halla el ancho
 archivo_txt = 'commandPotencia.txt' 
 datos_numericos = leer_datos_desde_txt(archivo_txt)
-if len(datos_numericos)!=10:
+if len(datos_numericos)!=11:
     print("Hay más(o menos) valores de los que debería")
 else:
     IPP_km=datos_numericos[0]
     IPP=IPP_km*1/150#IPP en ms
     Dutty=datos_numericos[1]
+    threshold=datos_numericos[2]
     ancho=IPP*Dutty*pow(10,3)/100
-    potenciaNominal=datos_numericos[2:]
+    potenciaNominal=datos_numericos[3:]
 # Configurar el cliente MQTT
 client = mqtt.Client()
 # Configurar los callbacks
