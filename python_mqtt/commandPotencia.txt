@@ -1,0 +1,2 @@
+IPP(km) DutyCicle(%) threshold(%) Wu Wd Nd Nu Eu Ed Sd Su
+1500 0.1 10 250 0 0 0 0 0 200 200 

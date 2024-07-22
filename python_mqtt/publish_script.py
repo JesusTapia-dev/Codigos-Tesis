@@ -1,13 +1,11 @@
+import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 
-# Especificar la dirección del broker MQTT como localhost
+MQTT_SERVER="10.10.10.102"
+MQTT_PORT = 1883 
+
+publishTopic="tesis/test"
 broker_address = "localhost"
-
-# Especificar el tópico al que deseas publicar
-topico = "tu_topico_aqui"
-
-# Mensaje que deseas publicar
-mensaje = "Hola, mundo MQTT!"
-
+mensaje = "[10,20,30,40,50,60,70,80]"
 # Publicar el mensaje en el tópico
-publish.single(topico, mensaje, hostname=broker_address)
+publish.single(publishTopic, mensaje, hostname=MQTT_SERVER)
